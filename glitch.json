@@ -1,0 +1,23 @@
+{
+  "install": "cd backend && npm install",
+  "start": "cd backend && npm run build && npm start",
+  "watch": {
+    "ignore": [
+      "backend/dist/**",
+      "backend/node_modules/**",
+      "backend/*.db",
+      "frontend/**"
+    ],
+    "install": {
+      "include": [
+        "backend/package.json"
+      ]
+    },
+    "restart": {
+      "include": [
+        "backend/src/**/*.ts"
+      ]
+    },
+    "throttle": 1000
+  }
+}
