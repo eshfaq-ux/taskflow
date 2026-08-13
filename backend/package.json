@@ -16,9 +16,11 @@
   "description": "",
   "dependencies": {
     "better-sqlite3": "^12.11.1",
+    "copyfiles": "^2.4.1",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "typescript": "^7.0.2"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^9.6.0",
@@ -26,11 +28,9 @@
     "@types/express": "^5.0.6",
     "@types/node": "^26.2.0",
     "@types/supertest": "^7.2.1",
-    "copyfiles": "^2.4.1",
     "supertest": "^7.2.2",
     "ts-node": "^10.9.2",
     "tsx": "^4.23.12",
-    "typescript": "^7.0.2",
     "vitest": "^4.1.10"
   },
   "type": "commonjs"
