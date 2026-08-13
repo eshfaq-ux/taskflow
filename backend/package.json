@@ -4,8 +4,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "tsx src/server.ts",
-    "build": "tsc && npm run copy-assets",
-    "copy-assets": "cp -r src/db/*.sql dist/db/ 2>/dev/null || mkdir -p dist/db && cp src/db/*.sql dist/db/",
+    "build": "tsc && copyfiles -u 1 \"src/**/*.sql\" dist",
     "start": "node dist/server.js",
     "postinstall": "npm run build",
     "test": "vitest run",
@@ -27,6 +26,7 @@
     "@types/express": "^5.0.6",
     "@types/node": "^26.2.0",
     "@types/supertest": "^7.2.1",
+    "copyfiles": "^2.4.1",
     "supertest": "^7.2.2",
     "ts-node": "^10.9.2",
     "tsx": "^4.23.12",
