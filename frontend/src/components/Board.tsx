@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import type { Board as BoardType, Task, Priority, CreateTaskData, UpdateTaskData } from '../types/task';
+import type { Board as BoardType, Priority, CreateTaskData, UpdateTaskData } from '../types/task';
 import * as api from '../services/api';
 import Column from './Column';
 import TaskModal from './TaskModal';
