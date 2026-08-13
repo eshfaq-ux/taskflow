@@ -4,7 +4,8 @@
   "main": "index.js",
   "scripts": {
     "dev": "tsx src/server.ts",
-    "build": "tsc",
+    "build": "tsc && npm run copy-assets",
+    "copy-assets": "cp -r src/db/*.sql dist/db/ 2>/dev/null || mkdir -p dist/db && cp src/db/*.sql dist/db/",
     "start": "node dist/server.js",
     "postinstall": "npm run build",
     "test": "vitest run",
