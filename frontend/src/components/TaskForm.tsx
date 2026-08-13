@@ -14,7 +14,7 @@ export default function TaskForm({ columns, onSubmit, onCancel }: TaskFormProps)
   const [columnId, setColumnId] = useState(columns[0]?.id ?? 1);
   const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!title.trim()) {
@@ -22,12 +22,16 @@ export default function TaskForm({ columns, onSubmit, onCancel }: TaskFormProps)
       return;
     }
 
-    onSubmit({
-      title: title.trim(),
-      description: description.trim() || undefined,
-      priority,
-      columnId,
-    });
+    try {
+      onSubmit({
+        title: title.trim(),
+        description: description.trim() || undefined,
+        priority,
+        columnId,
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create task');
+    }
   };
 
   return (

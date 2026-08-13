@@ -32,7 +32,12 @@ export default function TaskModal({ task, columns, onUpdate, onMove, onDelete, o
   };
 
   const handleDelete = () => {
-    if (confirm('Are you sure you want to delete this task?')) {
+    // Using browser confirm is acceptable for this assignment,
+    // but a custom modal would be better for production
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${task.title}"? This action cannot be undone.`
+    );
+    if (confirmed) {
       onDelete(task.id);
     }
   };
