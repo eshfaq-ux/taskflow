@@ -1,10 +1,8 @@
 import Database from 'better-sqlite3';
 import fs from 'fs';
-import path from 'path';
+import { SCHEMA_SQL, SEED_SQL } from './sql';
 
 const DB_PATH = process.env.DB_PATH ?? './taskflow.db';
-const SCHEMA_PATH = path.join(__dirname, 'schema.sql');
-const SEED_PATH = path.join(__dirname, 'seed.sql');
 
 let db: Database.Database;
 
@@ -24,12 +22,10 @@ export function initDb(dbPath: string = DB_PATH): Database.Database {
   db.pragma('foreign_keys = ON');
   db.pragma('journal_mode = WAL');
 
-  const schema = fs.readFileSync(SCHEMA_PATH, 'utf8');
-  db.exec(schema);
+  db.exec(SCHEMA_SQL);
 
   if (isNew) {
-    const seed = fs.readFileSync(SEED_PATH, 'utf8');
-    db.exec(seed);
+    db.exec(SEED_SQL);
   }
 
   return db;

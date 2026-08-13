@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "tsx src/server.ts",
-    "build": "tsc && copyfiles -u 1 \"src/**/*.sql\" dist",
+    "build": "tsc",
     "start": "node dist/server.js",
     "postinstall": "npm run build",
     "test": "vitest run",
@@ -16,7 +16,6 @@
   "description": "",
   "dependencies": {
     "better-sqlite3": "^12.11.1",
-    "copyfiles": "^2.4.1",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
