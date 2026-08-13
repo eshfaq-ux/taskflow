@@ -5,7 +5,18 @@ import { errorHandler } from './middleware/errorHandler';
 
 const app = express();
 
-app.use(cors());
+// Allow frontend from any origin in development, restrict in production
+const allowedOrigins = process.env.FRONTEND_URL 
+  ? [process.env.FRONTEND_URL]
+  : ['http://localhost:5173', 'http://localhost:3000'];
+
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' 
+    ? allowedOrigins 
+    : true,
+  credentials: true,
+}));
+
 app.use(express.json());
 
 app.use('/api', tasksRouter);
