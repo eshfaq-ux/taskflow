@@ -6,7 +6,9 @@ A lightweight task board application for small teams, built as a full-stack take
 
 TaskFlow is a Trello-inspired task management system that allows teams to organize work across columns (To Do, In Progress, Done), create and edit tasks with priorities, and filter tasks by priority. All data persists in a relational database with proper validation and error handling.
 
-**Live Demo:** _(will be added after deployment)_
+**Live Demo:** https://taskflow-drab-gamma.vercel.app
+
+**Backend API:** https://taskflow-backend-v77w.onrender.com
 
 **Repository:** https://github.com/eshfaq-ux/taskflow
 
@@ -514,13 +516,29 @@ This is a **fundamental principle of backend engineering** that I'll carry into 
 
 ## Deployment
 
-_(To be completed before final submission)_
+**Deployment is complete!** ✅
 
-The application will be deployed to:
-- **Backend:** Railway or Render (persistent SQLite storage)
-- **Frontend:** Vercel or Netlify
+- **Frontend:** Vercel - https://taskflow-drab-gamma.vercel.app
+- **Backend:** Render - https://taskflow-backend-v77w.onrender.com
+- **Database:** Supabase PostgreSQL (ap-south-1 region)
 
-Live URL will be added here after deployment is verified.
+### Production Stack
+- Frontend hosted on Vercel with automatic GitHub deployments
+- Backend hosted on Render free tier
+- PostgreSQL database on Supabase free tier
+- All three platforms provide reliable free hosting for this assignment
+
+### Verified Functionality
+All core features tested and working in production:
+- ✅ Board loads with seed data (3 columns, 8 tasks)
+- ✅ Create task persists across refresh
+- ✅ Edit task persists across refresh
+- ✅ Move task persists across refresh
+- ✅ Priority filter uses database-level API
+- ✅ Delete task works correctly
+- ✅ Error handling graceful (no raw database errors)
+- ✅ CORS configured correctly
+- ✅ SSL connections secure
 
 ---
 
