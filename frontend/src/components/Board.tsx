@@ -21,22 +21,23 @@ export default function Board() {
       setLoading(true);
       setError('');
 
-      // DATABASE-LEVEL filtering when a priority is selected — requirement from assignment
-      // This ensures the SQL query with WHERE clause executes in PostgreSQL, not JS filtering
+      // Always fetch the full board to keep column metadata (id, name, position) current.
+      const data = await api.getBoard(1);
+
       if (priority && priority !== 'All') {
-        const data = await api.getBoard(1);
+        // DATABASE-LEVEL filtering — one targeted API call that hits the PostgreSQL
+        // WHERE clause. The backend returns only matching rows; no in-memory filtering.
         const filteredTasks = await api.getTasksByPriority(1, priority);
-        
-        // Merge filtered tasks back into the board structure by column
+
+        // Distribute the filtered tasks back into their columns.
         const columnsWithFilteredTasks = data.columns.map((col) => ({
           ...col,
           tasks: filteredTasks.filter((task) => task.column_id === col.id),
         }));
-        
+
         setBoard({ ...data, columns: columnsWithFilteredTasks });
       } else {
-        // No filter — load full board
-        const data = await api.getBoard(1);
+        // No filter — show the full board as returned.
         setBoard(data);
       }
     } catch (err) {
