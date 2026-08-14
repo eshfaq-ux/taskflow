@@ -257,85 +257,86 @@ Delete a task.
 
 ## Local Setup
 
-### Prerequisites
-- Node.js 20+ and npm
-- PostgreSQL 12+ (local or hosted instance)
-- Git
+> **Just want to see it running?** The live demo is at https://taskflow-drab-gamma.vercel.app — no setup needed.
 
-### Installation
+### Prerequisites
+
+- **Node.js 20+** and npm — check with `node -v`
+- **PostgreSQL 12+** — check with `psql --version`. Install via [postgresql.org](https://www.postgresql.org/download/) or on macOS: `brew install postgresql`
+- **Git**
+
+### Step 1 — Clone and install dependencies
 
 ```bash
-# Clone the repository
 git clone https://github.com/eshfaq-ux/taskflow.git
 cd taskflow
 
-# Install backend dependencies
-cd backend
-npm install
-
-# Install frontend dependencies
-cd ../frontend
-npm install
+cd backend && npm install
+cd ../frontend && npm install
 ```
 
-### Environment Variables
+### Step 2 — Configure environment variables
 
-Create `backend/.env`:
+Both `.env.example` files are committed to the repo. Copy them and edit:
+
+```bash
+# From the project root:
+cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env
+```
+
+Open `backend/.env` and set your PostgreSQL credentials:
+
 ```env
 PORT=3001
 NODE_ENV=development
-DATABASE_URL=postgresql://user:password@localhost:5432/taskflow
+DATABASE_URL=postgresql://postgres:password@localhost:5432/taskflow
 ```
 
-For testing (optional — uses separate test database):
-```env
-TEST_DATABASE_URL=postgresql://user:password@localhost:5432/taskflow_test
+Replace `postgres:password` with your local PostgreSQL username and password. The `frontend/.env` default (`http://localhost:3001/api`) works as-is for local dev — no edits needed.
+
+### Step 3 — Create the database
+
+```bash
+createdb taskflow
+
+# Optional: create a separate test database (keeps tests isolated from dev data)
+createdb taskflow_test
 ```
 
-Create `frontend/.env`:
-```env
-VITE_API_URL=http://localhost:3001/api
+If `createdb` is not found, use `psql` directly:
+
+```bash
+psql -U postgres -c "CREATE DATABASE taskflow;"
 ```
 
-### Running the Application
+The backend **automatically runs `schema.sql` and `seed.sql`** on first startup — no manual migration step needed. The seed populates 1 board, 3 columns, and 8 tasks.
 
-**Terminal 1 (Backend):**
+### Step 4 — Start the application
+
+Open two terminals:
+
+**Terminal 1 — Backend:**
 ```bash
 cd backend
 npm run dev
 ```
-Backend runs at `http://localhost:3001`
+You should see: `Server running on port 3001` and `Database initialized successfully`.
 
-**Terminal 2 (Frontend):**
+**Terminal 2 — Frontend:**
 ```bash
 cd frontend
 npm run dev
 ```
-Frontend runs at `http://localhost:5173`
+You should see: `VITE v8.x ready` and a local URL.
 
-Open http://localhost:5173 in your browser.
+Open **http://localhost:5173** in your browser.
 
-### Database Setup
+### Resetting the database
 
-The database is **automatically initialized** on first run:
-1. `schema.sql` creates tables with constraints
-2. `seed.sql` populates initial data (1 board, 3 columns, 8 tasks) if the database is empty
-
-**Local PostgreSQL setup:**
 ```bash
-# Create database
-createdb taskflow
-
-# Optional: Create test database
-createdb taskflow_test
-
-# The backend will run schema.sql and seed.sql automatically on startup
-```
-
-To reset the database, drop and recreate it:
-```bash
-dropdb taskflow
-createdb taskflow
+dropdb taskflow && createdb taskflow
+# Restart the backend — it will re-run schema.sql and seed.sql automatically
 ```
 
 ---
