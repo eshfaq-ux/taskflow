@@ -1,5 +1,5 @@
 import { getDb } from '../db/database';
-import { getTaskCountsPerColumn, getTasksByPriority } from '../db/queries';
+import { getTaskCountsPerColumn, getTasksByPriority, searchTasksByTitle } from '../db/queries';
 
 const VALID_PRIORITIES = ['Low', 'Medium', 'High'] as const;
 type Priority = (typeof VALID_PRIORITIES)[number];
@@ -65,10 +65,21 @@ export async function getBoardWithColumns(boardId: number) {
 }
 
 // ---------------------------------------------------------------------------
-// Tasks filtered by priority (database-level — uses Query 2)
+// Tasks filtered by priority or title search (database-level)
 // ---------------------------------------------------------------------------
 
-export async function getTasksForBoard(boardId: number, priority?: string) {
+export async function getTasksForBoard(boardId: number, priority?: string, search?: string) {
+  // Title search takes precedence when both params are supplied — the two
+  // filters are independent controls and combining them is not required.
+  if (search) {
+    const trimmed = search.trim();
+    if (!trimmed) {
+      // Empty/whitespace search — fall through to full board below
+    } else {
+      return searchTasksByTitle(boardId, trimmed);
+    }
+  }
+
   if (priority) {
     if (!isPriority(priority)) {
       throw new ValidationError('Priority must be Low, Medium, or High');

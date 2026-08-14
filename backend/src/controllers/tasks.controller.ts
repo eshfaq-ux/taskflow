@@ -30,7 +30,8 @@ export async function getBoardTasks(req: Request, res: Response, next: NextFunct
     }
 
     const priority = req.query.priority as string | undefined;
-    const tasks = await tasksService.getTasksForBoard(boardId, priority);
+    const search = req.query.search as string | undefined;
+    const tasks = await tasksService.getTasksForBoard(boardId, priority, search);
     res.json(tasks);
   } catch (err) {
     next(err);
