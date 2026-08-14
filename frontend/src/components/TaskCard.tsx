@@ -6,63 +6,135 @@ interface TaskCardProps {
 }
 
 export default function TaskCard({ task, onClick }: TaskCardProps) {
-  const getPriorityColor = (priority: Priority) => {
+  const getPriorityConfig = (priority: Priority) => {
     switch (priority) {
-      case 'High': return '#d73a49';
-      case 'Medium': return '#fb8500';
-      case 'Low': return '#22863a';
+      case 'High':
+        return {
+          color: '#dc2626',
+          bg: '#fee2e2',
+          icon: '🔴',
+          label: 'High Priority'
+        };
+      case 'Medium':
+        return {
+          color: '#ea580c',
+          bg: '#ffedd5',
+          icon: '🟡',
+          label: 'Medium Priority'
+        };
+      case 'Low':
+        return {
+          color: '#16a34a',
+          bg: '#dcfce7',
+          icon: '🟢',
+          label: 'Low Priority'
+        };
     }
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) return 'Today';
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays < 7) return `${diffDays} days ago`;
+    
+    return date.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
-      year: 'numeric',
+      year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
     });
   };
+
+  const priorityConfig = getPriorityConfig(task.priority);
 
   return (
     <div
       onClick={onClick}
+      className="fade-in"
       style={{
-        padding: '1rem',
+        padding: '1.25rem',
         backgroundColor: '#fff',
-        border: '1px solid #ddd',
-        borderRadius: '6px',
-        marginBottom: '0.75rem',
+        border: '1px solid #e2e8f0',
+        borderRadius: '10px',
+        marginBottom: '0.875rem',
         cursor: 'pointer',
-        transition: 'box-shadow 0.2s',
+        transition: 'all 0.2s ease',
+        position: 'relative',
+        overflow: 'hidden'
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+        e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.12)';
+        e.currentTarget.style.transform = 'translateY(-2px)';
+        e.currentTarget.style.borderColor = '#cbd5e0';
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.boxShadow = 'none';
+        e.currentTarget.style.transform = 'translateY(0)';
+        e.currentTarget.style.borderColor = '#e2e8f0';
       }}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '0.5rem' }}>
-        <h4 style={{ margin: 0, fontSize: '1rem', flex: 1 }}>{task.title}</h4>
+      {/* Priority indicator bar */}
+      <div style={{
+        position: 'absolute',
+        left: 0,
+        top: 0,
+        bottom: 0,
+        width: '4px',
+        backgroundColor: priorityConfig.color,
+        borderTopLeftRadius: '10px',
+        borderBottomLeftRadius: '10px'
+      }} />
+
+      {/* Header: Title + Priority Badge */}
+      <div style={{ 
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'start',
+        marginBottom: '0.75rem',
+        gap: '0.75rem'
+      }}>
+        <h4 style={{ 
+          margin: 0,
+          fontSize: '1rem',
+          fontWeight: '600',
+          flex: 1,
+          color: '#1a202c',
+          lineHeight: '1.4'
+        }}>
+          {task.title}
+        </h4>
         <span
+          title={priorityConfig.label}
           style={{
-            padding: '0.15rem 0.5rem',
-            borderRadius: '10px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.35rem',
+            padding: '0.25rem 0.65rem',
+            borderRadius: '6px',
             fontSize: '0.75rem',
-            fontWeight: 'bold',
-            backgroundColor: getPriorityColor(task.priority) + '20',
-            color: getPriorityColor(task.priority),
+            fontWeight: '700',
+            backgroundColor: priorityConfig.bg,
+            color: priorityConfig.color,
             whiteSpace: 'nowrap',
-            marginLeft: '0.5rem'
+            border: `1px solid ${priorityConfig.color}30`
           }}
         >
+          <span style={{ fontSize: '0.65rem' }}>{priorityConfig.icon}</span>
           {task.priority}
         </span>
       </div>
+
+      {/* Description */}
       {task.description && (
         <p style={{
-          margin: '0 0 0.5rem 0',
+          margin: '0 0 0.875rem 0',
           fontSize: '0.9rem',
-          color: '#666',
+          color: '#4a5568',
+          lineHeight: '1.5',
           overflow: 'hidden',
           textOverflow: 'ellipsis',
           display: '-webkit-box',
@@ -72,13 +144,24 @@ export default function TaskCard({ task, onClick }: TaskCardProps) {
           {task.description}
         </p>
       )}
-      <p style={{
-        margin: 0,
-        fontSize: '0.75rem',
-        color: '#999',
+
+      {/* Footer: Created date */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+        paddingTop: '0.75rem',
+        borderTop: '1px solid #f7fafc'
       }}>
-        Created: {formatDate(task.created_at)}
-      </p>
+        <span style={{ fontSize: '0.85rem', opacity: 0.6 }}>🕐</span>
+        <span style={{
+          fontSize: '0.8rem',
+          color: '#718096',
+          fontWeight: '500'
+        }}>
+          {formatDate(task.created_at)}
+        </span>
+      </div>
     </div>
   );
 }

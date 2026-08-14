@@ -99,14 +99,52 @@ export default function Board() {
   if (loading) return <Loading />;
 
   return (
-    <div style={{ padding: '2rem', maxWidth: '1400px', margin: '0 auto' }}>
-      <div style={{ marginBottom: '2rem' }}>
-        <h1 style={{ margin: '0 0 0.5rem' }}>{board?.name}</h1>
-        <p style={{ color: '#666', margin: 0 }}>Manage your team's tasks</p>
+    <div style={{ 
+      padding: '2rem',
+      maxWidth: '1600px',
+      margin: '0 auto',
+      minHeight: '100vh'
+    }}>
+      {/* Header */}
+      <div style={{ 
+        marginBottom: '2rem',
+        padding: '2rem',
+        background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.9) 100%)',
+        borderRadius: '16px',
+        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12)',
+        backdropFilter: 'blur(10px)'
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '1rem',
+          marginBottom: '0.5rem'
+        }}>
+          <span style={{ fontSize: '2rem' }}>📋</span>
+          <h1 style={{ 
+            margin: 0,
+            fontSize: '2rem',
+            fontWeight: '700',
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text'
+          }}>
+            {board?.name}
+          </h1>
+        </div>
+        <p style={{ 
+          color: '#718096',
+          margin: 0,
+          fontSize: '1rem',
+          fontWeight: '500'
+        }}>
+          Manage your team's tasks efficiently
+        </p>
       </div>
 
       {error && (
-        <div style={{ marginBottom: '1rem' }}>
+        <div style={{ marginBottom: '1.5rem' }}>
           <ErrorMessage message={error} onRetry={() => setError('')} />
         </div>
       )}
@@ -116,17 +154,34 @@ export default function Board() {
       <button
         onClick={() => setShowCreateForm(!showCreateForm)}
         style={{
-          padding: '0.75rem 1.5rem',
-          backgroundColor: '#007bff',
+          padding: '0.875rem 2rem',
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
           color: '#fff',
           border: 'none',
-          borderRadius: '6px',
+          borderRadius: '12px',
           fontSize: '1rem',
+          fontWeight: '600',
           cursor: 'pointer',
           marginBottom: '1.5rem',
+          boxShadow: '0 4px 16px rgba(102, 126, 234, 0.4)',
+          transition: 'all 0.2s ease',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem'
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'translateY(-2px)';
+          e.currentTarget.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.5)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'translateY(0)';
+          e.currentTarget.style.boxShadow = '0 4px 16px rgba(102, 126, 234, 0.4)';
         }}
       >
-        {showCreateForm ? 'Cancel' : '+ New Task'}
+        <span style={{ fontSize: '1.2rem' }}>
+          {showCreateForm ? '✕' : '+'}
+        </span>
+        {showCreateForm ? 'Cancel' : 'New Task'}
       </button>
 
       {showCreateForm && board && (
@@ -141,9 +196,11 @@ export default function Board() {
 
       <div style={{
         display: 'flex',
-        gap: '1rem',
+        gap: '1.5rem',
         overflowX: 'auto',
-        paddingBottom: '1rem'
+        paddingBottom: '2rem',
+        scrollbarWidth: 'thin',
+        scrollbarColor: '#cbd5e0 transparent'
       }}>
         {board?.columns.map((column) => (
           <Column
