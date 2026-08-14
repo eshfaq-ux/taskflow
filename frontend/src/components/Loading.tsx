@@ -5,45 +5,27 @@ export default function Loading() {
       flexDirection: 'column',
       justifyContent: 'center',
       alignItems: 'center',
-      minHeight: '100vh',
-      gap: '1.5rem',
-      padding: '2rem'
+      minHeight: '400px',
+      padding: '3rem'
     }}>
-      {/* Spinner with visible colors */}
+      {/* Simple spinner */}
       <div style={{
-        width: '64px',
-        height: '64px',
-        border: '5px solid rgba(255, 255, 255, 0.3)',
-        borderTop: '5px solid #fff',
-        borderRight: '5px solid #a78bfa',
-        borderBottom: '5px solid #8b5cf6',
+        width: '48px',
+        height: '48px',
+        border: '4px solid #e9ecef',
+        borderTop: '4px solid #0d6efd',
         borderRadius: '50%',
-        animation: 'spin 0.8s linear infinite',
-        boxShadow: '0 4px 20px rgba(139, 92, 246, 0.5)'
+        animation: 'spin 0.8s linear infinite'
       }} />
       
       {/* Loading text */}
-      <div style={{
-        fontSize: '1.25rem',
-        color: '#fff',
-        fontWeight: '600',
-        textAlign: 'center',
-        textShadow: '0 2px 8px rgba(0, 0, 0, 0.3)'
+      <p style={{
+        marginTop: '1rem',
+        fontSize: '0.95rem',
+        color: '#6c757d'
       }}>
-        Loading your board...
-      </div>
-
-      {/* Subtle hint text */}
-      <div style={{
-        fontSize: '0.9rem',
-        color: 'rgba(255, 255, 255, 0.9)',
-        textAlign: 'center',
-        maxWidth: '400px',
-        lineHeight: '1.5',
-        textShadow: '0 1px 4px rgba(0, 0, 0, 0.2)'
-      }}>
-        Fetching tasks from the database
-      </div>
+        Loading board...
+      </p>
     </div>
   );
 }

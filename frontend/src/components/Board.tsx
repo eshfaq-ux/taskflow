@@ -100,47 +100,49 @@ export default function Board() {
 
   return (
     <div style={{ 
-      padding: '2rem',
-      maxWidth: '1600px',
+      maxWidth: '1400px',
       margin: '0 auto',
-      minHeight: '100vh'
+      padding: '2rem'
     }}>
       {/* Header */}
       <div style={{ 
-        marginBottom: '2rem',
-        padding: '2rem',
-        background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.9) 100%)',
-        borderRadius: '16px',
-        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12)',
-        backdropFilter: 'blur(10px)'
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '2rem'
       }}>
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '1rem',
-          marginBottom: '0.5rem'
-        }}>
-          <span style={{ fontSize: '2rem' }}>📋</span>
+        <div>
           <h1 style={{ 
-            margin: 0,
-            fontSize: '2rem',
-            fontWeight: '700',
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text'
+            margin: '0 0 0.25rem',
+            fontSize: '1.75rem',
+            fontWeight: '600',
+            color: '#212529'
           }}>
             {board?.name}
           </h1>
+          <p style={{ 
+            margin: 0,
+            fontSize: '0.95rem',
+            color: '#6c757d'
+          }}>
+            Manage your team's tasks
+          </p>
         </div>
-        <p style={{ 
-          color: '#718096',
-          margin: 0,
-          fontSize: '1rem',
-          fontWeight: '500'
-        }}>
-          Manage your team's tasks efficiently
-        </p>
+
+        <button
+          onClick={() => setShowCreateForm(!showCreateForm)}
+          style={{
+            padding: '0.625rem 1.25rem',
+            backgroundColor: '#0d6efd',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '4px',
+            fontSize: '0.95rem',
+            fontWeight: '500'
+          }}
+        >
+          {showCreateForm ? 'Cancel' : '+ New Task'}
+        </button>
       </div>
 
       {error && (
@@ -150,39 +152,6 @@ export default function Board() {
       )}
 
       <PriorityFilter value={priorityFilter} onChange={setPriorityFilter} />
-
-      <button
-        onClick={() => setShowCreateForm(!showCreateForm)}
-        style={{
-          padding: '0.875rem 2rem',
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          color: '#fff',
-          border: 'none',
-          borderRadius: '12px',
-          fontSize: '1rem',
-          fontWeight: '600',
-          cursor: 'pointer',
-          marginBottom: '1.5rem',
-          boxShadow: '0 4px 16px rgba(102, 126, 234, 0.4)',
-          transition: 'all 0.2s ease',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.5rem'
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.transform = 'translateY(-2px)';
-          e.currentTarget.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.5)';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = 'translateY(0)';
-          e.currentTarget.style.boxShadow = '0 4px 16px rgba(102, 126, 234, 0.4)';
-        }}
-      >
-        <span style={{ fontSize: '1.2rem' }}>
-          {showCreateForm ? '✕' : '+'}
-        </span>
-        {showCreateForm ? 'Cancel' : 'New Task'}
-      </button>
 
       {showCreateForm && board && (
         <div style={{ marginBottom: '1.5rem' }}>
@@ -196,11 +165,9 @@ export default function Board() {
 
       <div style={{
         display: 'flex',
-        gap: '1.5rem',
+        gap: '1rem',
         overflowX: 'auto',
-        paddingBottom: '2rem',
-        scrollbarWidth: 'thin',
-        scrollbarColor: '#cbd5e0 transparent'
+        paddingBottom: '1rem'
       }}>
         {board?.columns.map((column) => (
           <Column

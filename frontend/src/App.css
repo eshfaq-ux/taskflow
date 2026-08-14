@@ -1,4 +1,4 @@
-/* TaskFlow — Enhanced Professional Styles */
+/* TaskFlow — Clean Professional Styles */
 
 * {
   box-sizing: border-box;
@@ -12,9 +12,15 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  min-height: 100vh;
-  color: #2d3748;
+  background-color: #f8f9fa;
+  color: #212529;
+  line-height: 1.5;
+}
+
+/* Focus visible for accessibility */
+*:focus-visible {
+  outline: 2px solid #0d6efd;
+  outline-offset: 2px;
 }
 
 /* Smooth scrolling */
@@ -22,21 +28,10 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Focus visible for accessibility */
-*:focus-visible {
-  outline: 2px solid #667eea;
-  outline-offset: 2px;
-}
-
 /* Button reset */
 button {
   font-family: inherit;
   cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-button:active {
-  transform: scale(0.98);
 }
 
 /* Input reset */
@@ -47,46 +42,29 @@ select {
   font-size: inherit;
 }
 
-/* Loading spinner animation */
+/* Simple spinner animation */
 @keyframes spin {
   to {
     transform: rotate(360deg);
   }
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
 }
 
-@keyframes shimmer {
-  0% {
-    background-position: -1000px 0;
-  }
-  100% {
-    background-position: 1000px 0;
-  }
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
 }
 
-/* Utility classes */
-.fade-in {
-  animation: fadeIn 0.3s ease;
+::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 4px;
 }
 
-.skeleton {
-  background: linear-gradient(
-    90deg,
-    #f0f0f0 0px,
-    #e0e0e0 40px,
-    #f0f0f0 80px
-  );
-  background-size: 1000px 100%;
-  animation: shimmer 1.5s infinite;
-  border-radius: 6px;
+::-webkit-scrollbar-thumb:hover {
+  background: #a0aec0;
 }

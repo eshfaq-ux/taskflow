@@ -7,91 +7,58 @@ interface ColumnProps {
 }
 
 export default function Column({ column, onTaskClick }: ColumnProps) {
-  const getColumnColor = (name: string) => {
-    switch (name.toLowerCase()) {
-      case 'to do': return { bg: '#fef3c7', border: '#fbbf24', badge: '#f59e0b' };
-      case 'in progress': return { bg: '#dbeafe', border: '#60a5fa', badge: '#3b82f6' };
-      case 'done': return { bg: '#d1fae5', border: '#34d399', badge: '#10b981' };
-      default: return { bg: '#f3f4f6', border: '#9ca3af', badge: '#6b7280' };
-    }
-  };
-
-  const colors = getColumnColor(column.name);
-
   return (
     <div
-      className="fade-in"
       style={{
-        flex: '1 1 320px',
-        minWidth: '320px',
+        flex: '1 1 300px',
+        minWidth: '300px',
         maxWidth: '380px',
-        backgroundColor: '#fff',
-        borderRadius: '12px',
-        padding: '1.25rem',
-        boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)',
-        border: `2px solid ${colors.border}20`,
-        transition: 'all 0.2s ease'
+        backgroundColor: '#f8f9fa',
+        borderRadius: '6px',
+        padding: '1rem',
+        border: '1px solid #dee2e6'
       }}
     >
       {/* Column Header */}
       <div style={{
-        marginBottom: '1.25rem',
-        paddingBottom: '1rem',
-        borderBottom: `2px solid ${colors.bg}`,
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '1rem',
+        paddingBottom: '0.75rem',
+        borderBottom: '2px solid #e9ecef'
       }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
+        <h3 style={{
+          margin: 0,
+          fontSize: '1rem',
+          fontWeight: '600',
+          color: '#212529'
         }}>
-          <h3 style={{
-            margin: 0,
-            fontSize: '1.1rem',
-            fontWeight: '700',
-            color: '#2d3748',
-            letterSpacing: '0.3px'
-          }}>
-            {column.name}
-          </h3>
-          <span style={{
-            fontSize: '0.85rem',
-            color: '#fff',
-            fontWeight: '700',
-            backgroundColor: colors.badge,
-            padding: '0.35rem 0.75rem',
-            borderRadius: '20px',
-            minWidth: '32px',
-            textAlign: 'center',
-            boxShadow: `0 2px 8px ${colors.badge}40`
-          }}>
-            {column.tasks.length}
-          </span>
-        </div>
+          {column.name}
+        </h3>
+        <span style={{
+          fontSize: '0.85rem',
+          color: '#6c757d',
+          fontWeight: '500'
+        }}>
+          {column.tasks.length}
+        </span>
       </div>
       
       {/* Tasks Container */}
       <div style={{
-        minHeight: '200px',
-        maxHeight: 'calc(100vh - 400px)',
-        overflowY: 'auto',
-        overflowX: 'hidden',
-        scrollbarWidth: 'thin',
-        scrollbarColor: '#cbd5e0 transparent',
-        paddingRight: '0.25rem'
+        minHeight: '100px',
+        maxHeight: 'calc(100vh - 300px)',
+        overflowY: 'auto'
       }}>
         {column.tasks.length === 0 ? (
           <div style={{
-            padding: '3rem 1rem',
+            padding: '2rem 1rem',
             textAlign: 'center',
-            color: '#a0aec0',
-            fontWeight: '500',
-            fontSize: '0.95rem',
-            backgroundColor: colors.bg,
-            borderRadius: '8px',
-            border: `2px dashed ${colors.border}50`
+            color: '#adb5bd',
+            fontSize: '0.9rem'
           }}>
-            <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📭</div>
-            No tasks yet
+            No tasks
           </div>
         ) : (
           column.tasks.map((task) => (
