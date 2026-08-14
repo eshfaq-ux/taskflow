@@ -343,10 +343,17 @@ dropdb taskflow && createdb taskflow
 
 ## Running Tests
 
+Make sure `backend/.env` exists with at least `DATABASE_URL` set (Step 2 of local setup above). For isolated test runs, also set `TEST_DATABASE_URL` to a separate database — tests wipe and reseed the database before running, so you don't want them touching your dev data.
+
 ```bash
+# One-time: create a dedicated test database
+createdb taskflow_test
+
 cd backend
 npm test
 ```
+
+The test runner picks up `backend/.env` automatically — no need to prefix the command with environment variables.
 
 **Test coverage:**
 - ✅ Creating a task without a title fails (empty string and whitespace-only)
