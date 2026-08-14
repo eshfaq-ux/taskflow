@@ -12,6 +12,7 @@ interface TaskModalProps {
 
 export default function TaskModal({ task, columns, onUpdate, onMove, onDelete, onClose }: TaskModalProps) {
   const [isEditing, setIsEditing] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [title, setTitle] = useState(task.title);
   const [description, setDescription] = useState(task.description ?? '');
   const [priority, setPriority] = useState<Priority>(task.priority);
@@ -32,14 +33,8 @@ export default function TaskModal({ task, columns, onUpdate, onMove, onDelete, o
   };
 
   const handleDelete = () => {
-    // Using browser confirm is acceptable for this assignment,
-    // but a custom modal would be better for production
-    const confirmed = window.confirm(
-      `Are you sure you want to delete "${task.title}"? This action cannot be undone.`
-    );
-    if (confirmed) {
-      onDelete(task.id);
-    }
+    onDelete(task.id);
+    setShowDeleteConfirm(false);
   };
 
   const formatDate = (dateString: string) => {
@@ -239,7 +234,7 @@ export default function TaskModal({ task, columns, onUpdate, onMove, onDelete, o
 
             <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'space-between', marginTop: '1.5rem' }}>
               <button
-                onClick={handleDelete}
+                onClick={() => setShowDeleteConfirm(true)}
                 style={{
                   padding: '0.5rem 1rem',
                   border: 'none',
@@ -282,6 +277,94 @@ export default function TaskModal({ task, columns, onUpdate, onMove, onDelete, o
           </>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 2000
+          }}
+          onClick={() => setShowDeleteConfirm(false)}
+        >
+          <div
+            style={{
+              backgroundColor: '#fff',
+              padding: '1.5rem',
+              borderRadius: '6px',
+              maxWidth: '400px',
+              width: '90%',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 style={{
+              margin: '0 0 1rem',
+              fontSize: '1.1rem',
+              fontWeight: '600',
+              color: '#212529'
+            }}>
+              Delete Task?
+            </h3>
+
+            <p style={{
+              margin: '0 0 1.5rem',
+              fontSize: '0.95rem',
+              color: '#6c757d',
+              lineHeight: '1.5'
+            }}>
+              Are you sure you want to delete <strong>"{task.title}"</strong>?
+              <br />
+              This action cannot be undone.
+            </p>
+
+            <div style={{
+              display: 'flex',
+              gap: '0.5rem',
+              justifyContent: 'flex-end'
+            }}>
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                style={{
+                  padding: '0.5rem 1rem',
+                  border: '1px solid #ced4da',
+                  borderRadius: '4px',
+                  backgroundColor: '#fff',
+                  color: '#495057',
+                  cursor: 'pointer',
+                  fontSize: '0.9rem',
+                  fontWeight: '500'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                style={{
+                  padding: '0.5rem 1rem',
+                  border: 'none',
+                  borderRadius: '4px',
+                  backgroundColor: '#dc3545',
+                  color: '#fff',
+                  cursor: 'pointer',
+                  fontSize: '0.9rem',
+                  fontWeight: '500'
+                }}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
