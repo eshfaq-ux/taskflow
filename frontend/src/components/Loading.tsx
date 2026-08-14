@@ -8,15 +8,25 @@ export default function Loading() {
       minHeight: '400px',
       padding: '3rem'
     }}>
-      {/* Simple spinner */}
+      {/* Simple spinner with inline keyframe */}
+      <style>{`
+        @keyframes spinner-rotate {
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(360deg);
+          }
+        }
+      `}</style>
+      
       <div style={{
         width: '48px',
         height: '48px',
         border: '4px solid #e9ecef',
-        borderTop: '4px solid #0d6efd',
+        borderTopColor: '#0d6efd',
         borderRadius: '50%',
-        animation: 'spin 0.6s linear infinite',
-        willChange: 'transform'
+        animation: 'spinner-rotate 0.6s linear infinite'
       }} />
       
       {/* Loading text */}
