@@ -83,3 +83,31 @@ export async function getTasksByPriority(boardId: number, priority: string): Pro
   const { rows } = await getDb().query(sql, [boardId, priority]);
   return rows;
 }
+
+// ---------------------------------------------------------------------------
+// Query 3 — Tasks by title search, newest first
+//
+// Case-insensitive partial match using ILIKE so "login" matches "Fix Login Bug".
+// Filtering happens inside PostgreSQL — not fetched-then-filtered in JavaScript.
+// ---------------------------------------------------------------------------
+
+export async function searchTasksByTitle(boardId: number, search: string): Promise<TaskRow[]> {
+  const sql = `
+    SELECT
+      t.id,
+      t.title,
+      t.description,
+      t.priority,
+      t.created_at,
+      t.column_id
+    FROM tasks t
+    JOIN columns c
+      ON c.id = t.column_id
+    WHERE c.board_id = $1
+      AND t.title ILIKE $2
+    ORDER BY t.created_at DESC
+  `;
+  // Wrap in % wildcards for substring match: "login" → "%login%"
+  const { rows } = await getDb().query(sql, [boardId, `%${search}%`]);
+  return rows;
+}
