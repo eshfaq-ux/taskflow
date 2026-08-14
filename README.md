@@ -421,6 +421,15 @@ Tests use a separate PostgreSQL test database (`TEST_DATABASE_URL`) that is rese
 
 ---
 
+## Stretch Goals Implemented
+
+The assignment listed the following as optional stretch goals. Both are fully implemented:
+
+- **Task count per column:** Each column header shows a live task count. A dedicated `/api/boards/:id/column-counts` endpoint (Query 1 — `LEFT JOIN` + `GROUP BY`) also exposes this data via the API.
+- **Text search by title:** A search box sits alongside the priority filter. Typing triggers a debounced database-level query using PostgreSQL `ILIKE` — consistent with the same principle as the priority filter (filtering in SQL, not in JavaScript).
+
+---
+
 ## Assumptions
 
 The assignment intentionally leaves some details open. Here are the assumptions I made:
@@ -430,7 +439,7 @@ The assignment intentionally leaves some details open. Here are the assumptions 
 3. **No real-time updates:** Refreshing the page is required to see changes made by others. WebSockets are out of scope.
 4. **Task creation defaults to "Medium" priority:** If the user doesn't select a priority, it defaults to Medium.
 5. **Column order is determined by `position` field:** Columns are displayed in ascending `position` order, not alphabetically.
-6. **Browser confirmation for delete:** A native `confirm()` dialog is used for delete confirmation. A custom modal would be better for production but adds unnecessary complexity for this assignment.
+6. **Custom modal for delete confirmation:** A custom in-component confirmation modal is used for delete, keeping the UI consistent and accessible. A native `window.confirm()` would work but is less polished.
 7. **No pagination:** All tasks for a board are loaded at once. Fine for small teams; would need pagination for boards with 1000+ tasks.
 
 ---
@@ -441,7 +450,6 @@ Given more time or for a production system, I would add:
 
 ### Short-term (next sprint)
 - **Drag-and-drop:** Use `@dnd-kit/core` for a nicer task movement experience
-- **Text search:** Filter tasks by title/description (already has database support, just needs UI)
 - **Task reordering within columns:** Add a `position` field to tasks
 - **Keyboard shortcuts:** `n` to create task, `?` to show help modal
 - **Toast notifications:** Replace error boxes with subtle toast messages
@@ -455,7 +463,6 @@ Given more time or for a production system, I would add:
 - **Dark mode:** CSS variables and a toggle in the header
 
 ### Long-term (production at scale)
-- **PostgreSQL:** SQLite is fine for small teams but doesn't support concurrent writes at scale
 - **Authentication:** Auth0 or Clerk for user management
 - **WebSocket updates:** Real-time board synchronization via Socket.io
 - **Team permissions:** Read-only vs. edit access per board
