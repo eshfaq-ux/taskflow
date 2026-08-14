@@ -72,3 +72,7 @@ export async function deleteTask(taskId: number): Promise<void> {
 export async function getTasksByPriority(boardId: number, priority: Priority): Promise<Task[]> {
   return fetchApi<Task[]>(`/boards/${boardId}/tasks?priority=${priority}`);
 }
+
+export async function searchTasks(boardId: number, search: string): Promise<Task[]> {
+  return fetchApi<Task[]>(`/boards/${boardId}/tasks?search=${encodeURIComponent(search)}`);
+}
