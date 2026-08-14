@@ -15,7 +15,8 @@ export default function Loading() {
         border: '4px solid #e9ecef',
         borderTop: '4px solid #0d6efd',
         borderRadius: '50%',
-        animation: 'spin 0.8s linear infinite'
+        animation: 'spin 0.6s linear infinite',
+        willChange: 'transform'
       }} />
       
       {/* Loading text */}
