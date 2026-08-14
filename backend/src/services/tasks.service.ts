@@ -9,42 +9,56 @@ function isPriority(value: unknown): value is Priority {
 }
 
 // ---------------------------------------------------------------------------
+// Shared row type returned by most task queries
+// ---------------------------------------------------------------------------
+
+interface TaskRow {
+  id: number;
+  column_id: number;
+  title: string;
+  description: string | null;
+  priority: string;
+  created_at: string;
+}
+
+// ---------------------------------------------------------------------------
 // Board
 // ---------------------------------------------------------------------------
 
-export function getBoardWithColumns(boardId: number) {
+export async function getBoardWithColumns(boardId: number) {
   const db = getDb();
 
-  const board = db.prepare('SELECT id, name FROM boards WHERE id = ?').get(boardId) as
-    | { id: number; name: string }
-    | undefined;
+  const boardResult = await db.query<{ id: number; name: string }>(
+    'SELECT id, name FROM boards WHERE id = $1',
+    [boardId]
+  );
+  if (boardResult.rows.length === 0) return null;
+  const board = boardResult.rows[0];
 
-  if (!board) return null;
-
-  const columns = db
-    .prepare('SELECT id, board_id, name, position FROM columns WHERE board_id = ? ORDER BY position, id')
-    .all(boardId) as { id: number; board_id: number; name: string; position: number }[];
-
-  const tasks = db
-    .prepare(
-      `SELECT t.id, t.column_id, t.title, t.description, t.priority, t.created_at
-       FROM tasks t
-       JOIN columns c ON c.id = t.column_id
-       WHERE c.board_id = ?
-       ORDER BY t.created_at ASC`
-    )
-    .all(boardId) as {
+  const columnsResult = await db.query<{
     id: number;
-    column_id: number;
-    title: string;
-    description: string | null;
-    priority: string;
-    created_at: string;
-  }[];
+    board_id: number;
+    name: string;
+    position: number;
+  }>(
+    'SELECT id, board_id, name, position FROM columns WHERE board_id = $1 ORDER BY position, id',
+    [boardId]
+  );
+  const columns = columnsResult.rows;
 
-  const columnsWithTasks = columns.map((col) => ({
+  const tasksResult = await db.query<TaskRow>(
+    `SELECT t.id, t.column_id, t.title, t.description, t.priority, t.created_at
+     FROM tasks t
+     JOIN columns c ON c.id = t.column_id
+     WHERE c.board_id = $1
+     ORDER BY t.created_at ASC`,
+    [boardId]
+  );
+  const tasks = tasksResult.rows;
+
+  const columnsWithTasks = columns.map((col: { id: number; board_id: number; name: string; position: number }) => ({
     ...col,
-    tasks: tasks.filter((t) => t.column_id === col.id),
+    tasks: tasks.filter((t: TaskRow) => t.column_id === col.id),
   }));
 
   return { ...board, columns: columnsWithTasks };
@@ -54,7 +68,7 @@ export function getBoardWithColumns(boardId: number) {
 // Tasks filtered by priority (database-level — uses Query 2)
 // ---------------------------------------------------------------------------
 
-export function getTasksForBoard(boardId: number, priority?: string) {
+export async function getTasksForBoard(boardId: number, priority?: string) {
   if (priority) {
     if (!isPriority(priority)) {
       throw new ValidationError('Priority must be Low, Medium, or High');
@@ -62,24 +76,23 @@ export function getTasksForBoard(boardId: number, priority?: string) {
     return getTasksByPriority(boardId, priority);
   }
 
-  // No filter — return all tasks for the board
-  const db = getDb();
-  return db
-    .prepare(
-      `SELECT t.id, t.title, t.description, t.priority, t.created_at, t.column_id
-       FROM tasks t
-       JOIN columns c ON c.id = t.column_id
-       WHERE c.board_id = ?
-       ORDER BY t.created_at DESC`
-    )
-    .all(boardId);
+  // No filter — return all tasks for the board ordered newest first
+  const { rows } = await getDb().query(
+    `SELECT t.id, t.title, t.description, t.priority, t.created_at, t.column_id
+     FROM tasks t
+     JOIN columns c ON c.id = t.column_id
+     WHERE c.board_id = $1
+     ORDER BY t.created_at DESC`,
+    [boardId]
+  );
+  return rows;
 }
 
 // ---------------------------------------------------------------------------
 // Task count per column (database-level — uses Query 1)
 // ---------------------------------------------------------------------------
 
-export function getColumnTaskCounts(boardId: number) {
+export async function getColumnTaskCounts(boardId: number) {
   return getTaskCountsPerColumn(boardId);
 }
 
@@ -87,7 +100,7 @@ export function getColumnTaskCounts(boardId: number) {
 // Create task
 // ---------------------------------------------------------------------------
 
-export function createTask(data: {
+export async function createTask(data: {
   title: string;
   description?: string;
   priority?: string;
@@ -103,46 +116,45 @@ export function createTask(data: {
     throw new ValidationError('Priority must be Low, Medium, or High');
   }
 
-  const column = db.prepare('SELECT id FROM columns WHERE id = ?').get(data.columnId);
-  if (!column) throw new ValidationError('Column not found');
+  const colResult = await db.query('SELECT id FROM columns WHERE id = $1', [data.columnId]);
+  if (colResult.rows.length === 0) throw new ValidationError('Column not found');
 
-  const result = db
-    .prepare(
-      `INSERT INTO tasks (column_id, title, description, priority)
-       VALUES (?, ?, ?, ?)`
-    )
-    .run(data.columnId, title, data.description?.trim() || null, priority);
+  const insertResult = await db.query<TaskRow>(
+    `INSERT INTO tasks (column_id, title, description, priority)
+     VALUES ($1, $2, $3, $4)
+     RETURNING id, column_id, title, description, priority, created_at`,
+    [data.columnId, title, data.description?.trim() || null, priority]
+  );
 
-  return db
-    .prepare('SELECT id, column_id, title, description, priority, created_at FROM tasks WHERE id = ?')
-    .get(result.lastInsertRowid);
+  return insertResult.rows[0];
 }
 
 // ---------------------------------------------------------------------------
 // Update task
 // ---------------------------------------------------------------------------
 
-export function updateTask(
+export async function updateTask(
   taskId: number,
   data: { title?: string; description?: string; priority?: string }
 ) {
   const db = getDb();
 
-  const existing = db.prepare('SELECT id FROM tasks WHERE id = ?').get(taskId);
-  if (!existing) throw new NotFoundError('Task not found');
+  const existResult = await db.query('SELECT id FROM tasks WHERE id = $1', [taskId]);
+  if (existResult.rows.length === 0) throw new NotFoundError('Task not found');
 
   const fields: string[] = [];
   const values: unknown[] = [];
+  let paramIndex = 1;
 
   if (data.title !== undefined) {
     const title = data.title.trim();
     if (!title) throw new ValidationError('Task title is required');
-    fields.push('title = ?');
+    fields.push(`title = $${paramIndex++}`);
     values.push(title);
   }
 
   if (data.description !== undefined) {
-    fields.push('description = ?');
+    fields.push(`description = $${paramIndex++}`);
     values.push(data.description.trim() || null);
   }
 
@@ -150,51 +162,55 @@ export function updateTask(
     if (!isPriority(data.priority)) {
       throw new ValidationError('Priority must be Low, Medium, or High');
     }
-    fields.push('priority = ?');
+    fields.push(`priority = $${paramIndex++}`);
     values.push(data.priority);
   }
 
   if (fields.length === 0) throw new ValidationError('No fields to update');
 
   values.push(taskId);
-  db.prepare(`UPDATE tasks SET ${fields.join(', ')} WHERE id = ?`).run(...values);
+  const updateResult = await db.query<TaskRow>(
+    `UPDATE tasks SET ${fields.join(', ')} WHERE id = $${paramIndex}
+     RETURNING id, column_id, title, description, priority, created_at`,
+    values
+  );
 
-  return db
-    .prepare('SELECT id, column_id, title, description, priority, created_at FROM tasks WHERE id = ?')
-    .get(taskId);
+  return updateResult.rows[0];
 }
 
 // ---------------------------------------------------------------------------
 // Move task
 // ---------------------------------------------------------------------------
 
-export function moveTask(taskId: number, columnId: number) {
+export async function moveTask(taskId: number, columnId: number) {
   const db = getDb();
 
-  const task = db.prepare('SELECT id FROM tasks WHERE id = ?').get(taskId);
-  if (!task) throw new NotFoundError('Task not found');
+  const taskResult = await db.query('SELECT id FROM tasks WHERE id = $1', [taskId]);
+  if (taskResult.rows.length === 0) throw new NotFoundError('Task not found');
 
-  const column = db.prepare('SELECT id FROM columns WHERE id = ?').get(columnId);
-  if (!column) throw new ValidationError('Destination column not found');
+  const colResult = await db.query('SELECT id FROM columns WHERE id = $1', [columnId]);
+  if (colResult.rows.length === 0) throw new ValidationError('Destination column not found');
 
-  db.prepare('UPDATE tasks SET column_id = ? WHERE id = ?').run(columnId, taskId);
+  const updateResult = await db.query<TaskRow>(
+    `UPDATE tasks SET column_id = $1 WHERE id = $2
+     RETURNING id, column_id, title, description, priority, created_at`,
+    [columnId, taskId]
+  );
 
-  return db
-    .prepare('SELECT id, column_id, title, description, priority, created_at FROM tasks WHERE id = ?')
-    .get(taskId);
+  return updateResult.rows[0];
 }
 
 // ---------------------------------------------------------------------------
 // Delete task
 // ---------------------------------------------------------------------------
 
-export function deleteTask(taskId: number) {
+export async function deleteTask(taskId: number) {
   const db = getDb();
 
-  const task = db.prepare('SELECT id FROM tasks WHERE id = ?').get(taskId);
-  if (!task) throw new NotFoundError('Task not found');
+  const taskResult = await db.query('SELECT id FROM tasks WHERE id = $1', [taskId]);
+  if (taskResult.rows.length === 0) throw new NotFoundError('Task not found');
 
-  db.prepare('DELETE FROM tasks WHERE id = ?').run(taskId);
+  await db.query('DELETE FROM tasks WHERE id = $1', [taskId]);
 }
 
 // ---------------------------------------------------------------------------

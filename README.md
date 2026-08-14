@@ -23,11 +23,11 @@ TaskFlow is a Trello-inspired task management system that allows teams to organi
 ### Backend
 - **Node.js 20** with Express
 - **TypeScript** in strict mode
-- **better-sqlite3** for synchronous database operations
+- **PostgreSQL** via `pg` driver (async connection pool)
 - RESTful API design
 
 ### Database
-- **SQLite** with foreign key enforcement
+- **PostgreSQL** with connection pooling
 - Relational schema: `boards → columns → tasks`
 - Database-level queries for filtering and aggregation
 
@@ -257,6 +257,7 @@ Delete a task.
 
 ### Prerequisites
 - Node.js 20+ and npm
+- PostgreSQL 12+ (local or hosted instance)
 - Git
 
 ### Installation
@@ -281,7 +282,12 @@ Create `backend/.env`:
 ```env
 PORT=3001
 NODE_ENV=development
-DB_PATH=./taskflow.db
+DATABASE_URL=postgresql://user:password@localhost:5432/taskflow
+```
+
+For testing (optional — uses separate test database):
+```env
+TEST_DATABASE_URL=postgresql://user:password@localhost:5432/taskflow_test
 ```
 
 Create `frontend/.env`:
@@ -311,9 +317,24 @@ Open http://localhost:5173 in your browser.
 
 The database is **automatically initialized** on first run:
 1. `schema.sql` creates tables with constraints
-2. `seed.sql` populates initial data (1 board, 3 columns, 8 tasks)
+2. `seed.sql` populates initial data (1 board, 3 columns, 8 tasks) if the database is empty
 
-To reset the database, delete `backend/taskflow.db` and restart the backend.
+**Local PostgreSQL setup:**
+```bash
+# Create database
+createdb taskflow
+
+# Optional: Create test database
+createdb taskflow_test
+
+# The backend will run schema.sql and seed.sql automatically on startup
+```
+
+To reset the database, drop and recreate it:
+```bash
+dropdb taskflow
+createdb taskflow
+```
 
 ---
 
@@ -339,22 +360,24 @@ npm test
 
 **14 tests, all passing.**
 
-Tests use an isolated `test.db` that is recreated for each test run, ensuring deterministic results.
+Tests use a dedicated PostgreSQL test database (set via `TEST_DATABASE_URL`) that is wiped and reseeded before each test run, ensuring deterministic results.
 
 ---
 
 ## Design Decisions
 
-### SQLite over PostgreSQL
-- **Zero-setup:** No separate database server required
-- **Perfectly sufficient:** SQLite handles tens of thousands of tasks without issue
-- **Production-ready:** Used by Airbnb, Apple, and others for embedded use cases
+### PostgreSQL over SQLite
+- **Production-ready:** PostgreSQL handles concurrent writes and scales horizontally
+- **Free hosting:** Railway, Render, Neon, Supabase all offer free PostgreSQL tiers
+- **No file storage needed:** Cloud databases eliminate the need for persistent disk mounts
+- **Industry standard:** PostgreSQL is battle-tested for production workloads
 - **Explicit SQL:** The assignment evaluates SQL query skills, not ORM configuration
 
-### better-sqlite3 over sqlite3
-- **Synchronous API:** Simpler error handling and control flow
-- **Better performance:** Faster than the async `sqlite3` library for this workload
-- **Type-safe:** Works seamlessly with TypeScript
+### pg driver over Prisma/TypeORM
+- **Direct SQL control:** Assignment requires visible, readable SQL queries
+- **Async/await:** Modern `pg` driver with connection pooling
+- **Type-safe:** Works seamlessly with TypeScript generics
+- **Zero magic:** No hidden query generation or N+1 pitfalls
 
 ### Backend Validation as Source of Truth
 Frontend validation provides immediate feedback, but the backend **always** validates:
@@ -388,7 +411,7 @@ After creating, updating, moving, or deleting a task, the board is refetched fro
 At scale, optimistic updates would improve UX, but the current approach is more reliable.
 
 ### Test Database Strategy
-Tests use a separate `test.db` that is deleted and recreated before each test run.
+Tests use a separate PostgreSQL test database (`TEST_DATABASE_URL`) that is reset before the suite runs.
 
 - **Isolation:** Tests don't interfere with the development database
 - **Determinism:** Known seed data ensures predictable assertions

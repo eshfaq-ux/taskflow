@@ -1,40 +1,45 @@
-import Database from 'better-sqlite3';
-import fs from 'fs';
+import { Pool } from 'pg';
 import { SCHEMA_SQL, SEED_SQL } from './sql';
 
-const DB_PATH = process.env.DB_PATH ?? './taskflow.db';
+const DATABASE_URL = process.env.DATABASE_URL;
 
-let db: Database.Database;
+let pool: Pool;
 
-export function getDb(): Database.Database {
-  if (!db) {
+export function getDb(): Pool {
+  if (!pool) {
     throw new Error('Database not initialised. Call initDb() first.');
   }
-  return db;
+  return pool;
 }
 
-export function initDb(dbPath: string = DB_PATH): Database.Database {
-  const isNew = !fs.existsSync(dbPath);
-
-  db = new Database(dbPath);
-
-  // Must be set on every connection — SQLite does not persist this flag
-  db.pragma('foreign_keys = ON');
-  db.pragma('journal_mode = WAL');
-
-  db.exec(SCHEMA_SQL);
-
-  if (isNew) {
-    db.exec(SEED_SQL);
+export async function initDb(): Promise<Pool> {
+  if (!DATABASE_URL) {
+    throw new Error('DATABASE_URL environment variable is required');
   }
 
-  return db;
+  pool = new Pool({
+    connectionString: DATABASE_URL,
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  });
+
+  // Verify connectivity
+  await pool.query('SELECT NOW()');
+
+  // CREATE TABLE IF NOT EXISTS is idempotent — safe to run on every startup
+  await pool.query(SCHEMA_SQL);
+
+  // Seed only when the boards table is empty (fresh database)
+  const { rows } = await pool.query('SELECT COUNT(*) AS count FROM boards');
+  if (parseInt(rows[0].count, 10) === 0) {
+    await pool.query(SEED_SQL);
+  }
+
+  return pool;
 }
 
-export function closeDb(): void {
-  if (db) {
-    db.close();
-    // Allow re-initialisation (needed for test isolation)
-    db = undefined as unknown as Database.Database;
+export async function closeDb(): Promise<void> {
+  if (pool) {
+    await pool.end();
+    pool = undefined as unknown as Pool;
   }
 }

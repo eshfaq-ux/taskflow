@@ -4,7 +4,7 @@
  * All non-trivial database queries live here so they are easy to locate,
  * read, and demonstrate during a technical walkthrough.
  *
- * These queries are executed by SQLite — they do NOT fetch all rows and
+ * These queries are executed by PostgreSQL — they do NOT fetch all rows and
  * then filter in JavaScript.
  */
 
@@ -33,10 +33,10 @@ export interface TaskRow {
 // Query 1 — Task count per column
 //
 // Uses LEFT JOIN so columns with zero tasks are still returned.
-// Grouping and counting happen inside SQLite, not in application code.
+// Grouping and counting happen inside PostgreSQL, not in application code.
 // ---------------------------------------------------------------------------
 
-export function getTaskCountsPerColumn(boardId: number): ColumnTaskCount[] {
+export async function getTaskCountsPerColumn(boardId: number): Promise<ColumnTaskCount[]> {
   const sql = `
     SELECT
       c.id,
@@ -45,21 +45,26 @@ export function getTaskCountsPerColumn(boardId: number): ColumnTaskCount[] {
     FROM columns c
     LEFT JOIN tasks t
       ON t.column_id = c.id
-    WHERE c.board_id = ?
+    WHERE c.board_id = $1
     GROUP BY c.id, c.name
     ORDER BY c.position, c.id
   `;
-  return getDb().prepare(sql).all(boardId) as ColumnTaskCount[];
+  const { rows } = await getDb().query<{ id: number; name: string; task_count: string }>(sql, [boardId]);
+  return rows.map((row: { id: number; name: string; task_count: string }) => ({
+    ...row,
+    // pg returns COUNT as a string — coerce to number
+    task_count: parseInt(row.task_count, 10),
+  }));
 }
 
 // ---------------------------------------------------------------------------
 // Query 2 — Tasks by priority, newest first
 //
 // Joins tasks → columns to scope the query to a specific board.
-// Filtering and ordering happen inside SQLite.
+// Filtering and ordering happen inside PostgreSQL.
 // ---------------------------------------------------------------------------
 
-export function getTasksByPriority(boardId: number, priority: string): TaskRow[] {
+export async function getTasksByPriority(boardId: number, priority: string): Promise<TaskRow[]> {
   const sql = `
     SELECT
       t.id,
@@ -71,9 +76,10 @@ export function getTasksByPriority(boardId: number, priority: string): TaskRow[]
     FROM tasks t
     JOIN columns c
       ON c.id = t.column_id
-    WHERE c.board_id = ?
-      AND t.priority = ?
+    WHERE c.board_id = $1
+      AND t.priority = $2
     ORDER BY t.created_at DESC
   `;
-  return getDb().prepare(sql).all(boardId, priority) as TaskRow[];
+  const { rows } = await getDb().query(sql, [boardId, priority]);
+  return rows;
 }

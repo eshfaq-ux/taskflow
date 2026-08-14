@@ -16,12 +16,29 @@ export default function Board() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [priorityFilter, setPriorityFilter] = useState<Priority | 'All'>('All');
 
-  const loadBoard = async () => {
+  const loadBoard = async (priority?: Priority | 'All') => {
     try {
       setLoading(true);
       setError('');
-      const data = await api.getBoard(1);
-      setBoard(data);
+
+      // DATABASE-LEVEL filtering when a priority is selected — requirement from assignment
+      // This ensures the SQL query with WHERE clause executes in PostgreSQL, not JS filtering
+      if (priority && priority !== 'All') {
+        const data = await api.getBoard(1);
+        const filteredTasks = await api.getTasksByPriority(1, priority);
+        
+        // Merge filtered tasks back into the board structure by column
+        const columnsWithFilteredTasks = data.columns.map((col) => ({
+          ...col,
+          tasks: filteredTasks.filter((task) => task.column_id === col.id),
+        }));
+        
+        setBoard({ ...data, columns: columnsWithFilteredTasks });
+      } else {
+        // No filter — load full board
+        const data = await api.getBoard(1);
+        setBoard(data);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load board');
     } finally {
@@ -30,14 +47,14 @@ export default function Board() {
   };
 
   useEffect(() => {
-    loadBoard();
-  }, []);
+    loadBoard(priorityFilter);
+  }, [priorityFilter]);
 
   const handleCreateTask = async (data: CreateTaskData) => {
     try {
       setError('');
       await api.createTask(data);
-      await loadBoard();
+      await loadBoard(priorityFilter);
       setShowCreateForm(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create task');
@@ -48,7 +65,7 @@ export default function Board() {
     try {
       setError('');
       await api.updateTask(taskId, data);
-      await loadBoard();
+      await loadBoard(priorityFilter);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update task');
     }
@@ -58,7 +75,7 @@ export default function Board() {
     try {
       setError('');
       await api.moveTask(taskId, columnId);
-      await loadBoard();
+      await loadBoard(priorityFilter);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to move task');
     }
@@ -68,23 +85,11 @@ export default function Board() {
     try {
       setError('');
       await api.deleteTask(taskId);
-      await loadBoard();
+      await loadBoard(priorityFilter);
       setSelectedTaskId(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete task');
     }
-  };
-
-  const getFilteredBoard = (): BoardType | null => {
-    if (!board || priorityFilter === 'All') return board;
-
-    return {
-      ...board,
-      columns: board.columns.map((col) => ({
-        ...col,
-        tasks: col.tasks.filter((task) => task.priority === priorityFilter),
-      })),
-    };
   };
 
   const selectedTask = board?.columns
@@ -92,8 +97,6 @@ export default function Board() {
     .find((task) => task.id === selectedTaskId);
 
   if (loading) return <Loading />;
-
-  const filteredBoard = getFilteredBoard();
 
   return (
     <div style={{ padding: '2rem', maxWidth: '1400px', margin: '0 auto' }}>
@@ -142,7 +145,7 @@ export default function Board() {
         overflowX: 'auto',
         paddingBottom: '1rem'
       }}>
-        {filteredBoard?.columns.map((column) => (
+        {board?.columns.map((column) => (
           <Column
             key={column.id}
             column={column}

@@ -1,4 +1,4 @@
-import type { Board, CreateTaskData, UpdateTaskData, Priority } from '../types/task';
+import type { Board, CreateTaskData, UpdateTaskData, Priority, Task } from '../types/task';
 
 const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3001/api';
 
@@ -69,6 +69,6 @@ export async function deleteTask(taskId: number): Promise<void> {
   });
 }
 
-export async function getTasksByPriority(boardId: number, priority: Priority) {
-  return fetchApi(`/boards/${boardId}/tasks?priority=${priority}`);
+export async function getTasksByPriority(boardId: number, priority: Priority): Promise<Task[]> {
+  return fetchApi<Task[]>(`/boards/${boardId}/tasks?priority=${priority}`);
 }

@@ -14,6 +14,14 @@ export default function TaskCard({ task, onClick }: TaskCardProps) {
     }
   };
 
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  };
+
   return (
     <div
       onClick={onClick}
@@ -52,7 +60,7 @@ export default function TaskCard({ task, onClick }: TaskCardProps) {
       </div>
       {task.description && (
         <p style={{
-          margin: 0,
+          margin: '0 0 0.5rem 0',
           fontSize: '0.9rem',
           color: '#666',
           overflow: 'hidden',
@@ -64,6 +72,13 @@ export default function TaskCard({ task, onClick }: TaskCardProps) {
           {task.description}
         </p>
       )}
+      <p style={{
+        margin: 0,
+        fontSize: '0.75rem',
+        color: '#999',
+      }}>
+        Created: {formatDate(task.created_at)}
+      </p>
     </div>
   );
 }

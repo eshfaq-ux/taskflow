@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import * as tasksService from '../services/tasks.service';
 
-export function getBoard(req: Request, res: Response, next: NextFunction): void {
+export async function getBoard(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const boardId = parseInt(String(req.params.boardId), 10);
     if (isNaN(boardId)) {
@@ -9,7 +9,7 @@ export function getBoard(req: Request, res: Response, next: NextFunction): void 
       return;
     }
 
-    const board = tasksService.getBoardWithColumns(boardId);
+    const board = await tasksService.getBoardWithColumns(boardId);
     if (!board) {
       res.status(404).json({ error: 'Board not found' });
       return;
@@ -21,7 +21,7 @@ export function getBoard(req: Request, res: Response, next: NextFunction): void 
   }
 }
 
-export function getBoardTasks(req: Request, res: Response, next: NextFunction): void {
+export async function getBoardTasks(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const boardId = parseInt(String(req.params.boardId), 10);
     if (isNaN(boardId)) {
@@ -30,14 +30,14 @@ export function getBoardTasks(req: Request, res: Response, next: NextFunction): 
     }
 
     const priority = req.query.priority as string | undefined;
-    const tasks = tasksService.getTasksForBoard(boardId, priority);
+    const tasks = await tasksService.getTasksForBoard(boardId, priority);
     res.json(tasks);
   } catch (err) {
     next(err);
   }
 }
 
-export function getColumnCounts(req: Request, res: Response, next: NextFunction): void {
+export async function getColumnCounts(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const boardId = parseInt(String(req.params.boardId), 10);
     if (isNaN(boardId)) {
@@ -45,23 +45,23 @@ export function getColumnCounts(req: Request, res: Response, next: NextFunction)
       return;
     }
 
-    const counts = tasksService.getColumnTaskCounts(boardId);
+    const counts = await tasksService.getColumnTaskCounts(boardId);
     res.json(counts);
   } catch (err) {
     next(err);
   }
 }
 
-export function createTask(req: Request, res: Response, next: NextFunction): void {
+export async function createTask(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const task = tasksService.createTask(req.body);
+    const task = await tasksService.createTask(req.body);
     res.status(201).json(task);
   } catch (err) {
     next(err);
   }
 }
 
-export function updateTask(req: Request, res: Response, next: NextFunction): void {
+export async function updateTask(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const taskId = parseInt(String(req.params.taskId), 10);
     if (isNaN(taskId)) {
@@ -69,14 +69,14 @@ export function updateTask(req: Request, res: Response, next: NextFunction): voi
       return;
     }
 
-    const task = tasksService.updateTask(taskId, req.body);
+    const task = await tasksService.updateTask(taskId, req.body);
     res.json(task);
   } catch (err) {
     next(err);
   }
 }
 
-export function moveTask(req: Request, res: Response, next: NextFunction): void {
+export async function moveTask(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const taskId = parseInt(String(req.params.taskId), 10);
     if (isNaN(taskId)) {
@@ -90,14 +90,14 @@ export function moveTask(req: Request, res: Response, next: NextFunction): void 
       return;
     }
 
-    const task = tasksService.moveTask(taskId, columnId);
+    const task = await tasksService.moveTask(taskId, columnId);
     res.json(task);
   } catch (err) {
     next(err);
   }
 }
 
-export function deleteTask(req: Request, res: Response, next: NextFunction): void {
+export async function deleteTask(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const taskId = parseInt(String(req.params.taskId), 10);
     if (isNaN(taskId)) {
@@ -105,7 +105,7 @@ export function deleteTask(req: Request, res: Response, next: NextFunction): voi
       return;
     }
 
-    tasksService.deleteTask(taskId);
+    await tasksService.deleteTask(taskId);
     res.status(204).send();
   } catch (err) {
     next(err);
