@@ -9,15 +9,17 @@ export default function Loading() {
       gap: '1.5rem',
       padding: '2rem'
     }}>
-      {/* Spinner */}
+      {/* Spinner with visible colors */}
       <div style={{
         width: '64px',
         height: '64px',
-        border: '5px solid rgba(255, 255, 255, 0.2)',
+        border: '5px solid rgba(255, 255, 255, 0.3)',
         borderTop: '5px solid #fff',
+        borderRight: '5px solid #a78bfa',
+        borderBottom: '5px solid #8b5cf6',
         borderRadius: '50%',
         animation: 'spin 0.8s linear infinite',
-        boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)'
+        boxShadow: '0 4px 20px rgba(139, 92, 246, 0.5)'
       }} />
       
       {/* Loading text */}
@@ -26,7 +28,7 @@ export default function Loading() {
         color: '#fff',
         fontWeight: '600',
         textAlign: 'center',
-        textShadow: '0 2px 8px rgba(0, 0, 0, 0.2)'
+        textShadow: '0 2px 8px rgba(0, 0, 0, 0.3)'
       }}>
         Loading your board...
       </div>
@@ -34,10 +36,11 @@ export default function Loading() {
       {/* Subtle hint text */}
       <div style={{
         fontSize: '0.9rem',
-        color: 'rgba(255, 255, 255, 0.8)',
+        color: 'rgba(255, 255, 255, 0.9)',
         textAlign: 'center',
         maxWidth: '400px',
-        lineHeight: '1.5'
+        lineHeight: '1.5',
+        textShadow: '0 1px 4px rgba(0, 0, 0, 0.2)'
       }}>
         Fetching tasks from the database
       </div>
