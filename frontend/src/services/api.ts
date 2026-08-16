@@ -42,22 +42,22 @@ export async function getBoard(boardId: number): Promise<Board> {
   return fetchApi<Board>(`/boards/${boardId}`);
 }
 
-export async function createTask(data: CreateTaskData) {
-  return fetchApi('/tasks', {
+export async function createTask(data: CreateTaskData): Promise<Task> {
+  return fetchApi<Task>('/tasks', {
     method: 'POST',
     body: JSON.stringify(data),
   });
 }
 
-export async function updateTask(taskId: number, data: UpdateTaskData) {
-  return fetchApi(`/tasks/${taskId}`, {
+export async function updateTask(taskId: number, data: UpdateTaskData): Promise<Task> {
+  return fetchApi<Task>(`/tasks/${taskId}`, {
     method: 'PATCH',
     body: JSON.stringify(data),
   });
 }
 
-export async function moveTask(taskId: number, columnId: number) {
-  return fetchApi(`/tasks/${taskId}/move`, {
+export async function moveTask(taskId: number, columnId: number): Promise<Task> {
+  return fetchApi<Task>(`/tasks/${taskId}/move`, {
     method: 'PATCH',
     body: JSON.stringify({ columnId }),
   });
