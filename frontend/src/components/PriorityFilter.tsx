@@ -12,7 +12,7 @@ const PriorityFilter = memo(function PriorityFilter({
 }: PriorityFilterProps) {
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
-      onChange((e.target.value as Priority) | ('All' as const));
+      onChange(e.target.value as Priority | 'All');
     },
     [onChange]
   );
