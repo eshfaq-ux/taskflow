@@ -1,43 +1,44 @@
+import { memo, useCallback } from 'react';
+
 interface SearchBarProps {
   value: string;
   onChange: (value: string) => void;
 }
 
-export default function SearchBar({ value, onChange }: SearchBarProps) {
+const SearchBar = memo(function SearchBar({ value, onChange }: SearchBarProps) {
+  const handleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      onChange(e.target.value);
+    },
+    [onChange]
+  );
+
   return (
-    <div style={{ position: 'relative', display: 'inline-block' }}>
-      {/* Search icon */}
-      <span style={{
-        position: 'absolute',
-        left: '0.65rem',
-        top: '50%',
-        transform: 'translateY(-50%)',
-        color: '#adb5bd',
-        fontSize: '0.9rem',
-        pointerEvents: 'none',
-        lineHeight: 1
-      }}>
-        🔍
-      </span>
+    <div style={{ position: 'relative', minWidth: '250px' }}>
       <input
-        type="search"
+        type="text"
+        placeholder="Search tasks..."
         value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder="Search tasks…"
-        aria-label="Search tasks by title"
+        onChange={handleChange}
         style={{
-          paddingLeft: '2rem',
-          paddingRight: value ? '2rem' : '0.75rem',
-          paddingTop: '0.5rem',
-          paddingBottom: '0.5rem',
+          width: '100%',
+          padding: '0.5rem 0.75rem',
           border: '1px solid #ced4da',
           borderRadius: '4px',
           fontSize: '0.9rem',
-          width: '220px',
-          backgroundColor: '#fff',
-          outline: 'none',
+          boxSizing: 'border-box',
+          transition: 'border-color 0.2s',
+        }}
+        onFocus={(e) => {
+          e.currentTarget.style.borderColor = '#0d6efd';
+          e.currentTarget.style.outline = 'none';
+        }}
+        onBlur={(e) => {
+          e.currentTarget.style.borderColor = '#ced4da';
         }}
       />
     </div>
   );
-}
+});
+
+export default SearchBar;

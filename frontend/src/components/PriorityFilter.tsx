@@ -1,3 +1,4 @@
+import { memo, useCallback } from 'react';
 import type { Priority } from '../types/task';
 
 interface PriorityFilterProps {
@@ -5,39 +6,50 @@ interface PriorityFilterProps {
   onChange: (priority: Priority | 'All') => void;
 }
 
-export default function PriorityFilter({ value, onChange }: PriorityFilterProps) {
-  const priorities: Array<Priority | 'All'> = ['All', 'Low', 'Medium', 'High'];
+const PriorityFilter = memo(function PriorityFilter({
+  value,
+  onChange,
+}: PriorityFilterProps) {
+  const handleChange = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      onChange((e.target.value as Priority) | ('All' as const));
+    },
+    [onChange]
+  );
 
   return (
-    <div style={{ marginBottom: '1.5rem' }}>
-      <label style={{
-        display: 'inline-block',
-        marginRight: '0.75rem',
-        fontWeight: '500',
-        color: '#495057',
-        fontSize: '0.9rem'
-      }}>
+    <div>
+      <label htmlFor="priority-filter" style={{ marginRight: '0.5rem', fontSize: '0.9rem' }}>
         Priority:
       </label>
-      
       <select
+        id="priority-filter"
         value={value}
-        onChange={(e) => onChange(e.target.value as Priority | 'All')}
+        onChange={handleChange}
         style={{
-          padding: '0.5rem 2rem 0.5rem 0.75rem',
+          padding: '0.4rem 0.75rem',
           border: '1px solid #ced4da',
           borderRadius: '4px',
           fontSize: '0.9rem',
           backgroundColor: '#fff',
-          cursor: 'pointer'
+          cursor: 'pointer',
+          transition: 'border-color 0.2s',
+        }}
+        onFocus={(e) => {
+          e.currentTarget.style.borderColor = '#0d6efd';
+          e.currentTarget.style.outline = 'none';
+        }}
+        onBlur={(e) => {
+          e.currentTarget.style.borderColor = '#ced4da';
         }}
       >
-        {priorities.map((priority) => (
-          <option key={priority} value={priority}>
-            {priority}
-          </option>
-        ))}
+        <option value="All">All</option>
+        <option value="High">High</option>
+        <option value="Medium">Medium</option>
+        <option value="Low">Low</option>
       </select>
     </div>
   );
-}
+});
+
+export default PriorityFilter;
