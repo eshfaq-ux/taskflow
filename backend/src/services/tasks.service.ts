@@ -1,5 +1,10 @@
 import { getDb } from '../db/database';
-import { getTaskCountsPerColumn, getTasksByPriority, searchTasksByTitle } from '../db/queries';
+import {
+  getTaskCountsPerColumn,
+  getTasksByPriority,
+  searchTasksByTitle,
+  getBoardWithColumnsAndTasks,
+} from '../db/queries';
 
 const VALID_PRIORITIES = ['Low', 'Medium', 'High'] as const;
 type Priority = (typeof VALID_PRIORITIES)[number];
@@ -26,49 +31,20 @@ interface TaskRow {
 // ---------------------------------------------------------------------------
 
 export async function getBoardWithColumns(boardId: number) {
-  const db = getDb();
-
-  const boardResult = await db.query<{ id: number; name: string }>(
-    'SELECT id, name FROM boards WHERE id = $1',
-    [boardId]
-  );
-  if (boardResult.rows.length === 0) return null;
-  const board = boardResult.rows[0];
-
-  const columnsResult = await db.query<{
-    id: number;
-    board_id: number;
-    name: string;
-    position: number;
-  }>(
-    'SELECT id, board_id, name, position FROM columns WHERE board_id = $1 ORDER BY position, id',
-    [boardId]
-  );
-  const columns = columnsResult.rows;
-
-  const tasksResult = await db.query<TaskRow>(
-    `SELECT t.id, t.column_id, t.title, t.description, t.priority, t.created_at
-     FROM tasks t
-     JOIN columns c ON c.id = t.column_id
-     WHERE c.board_id = $1
-     ORDER BY t.created_at ASC`,
-    [boardId]
-  );
-  const tasks = tasksResult.rows;
-
-  const columnsWithTasks = columns.map((col: { id: number; board_id: number; name: string; position: number }) => ({
-    ...col,
-    tasks: tasks.filter((t: TaskRow) => t.column_id === col.id),
-  }));
-
-  return { ...board, columns: columnsWithTasks };
+  // Use optimized query that fetches all columns and tasks in a single query
+  // This avoids the N+1 problem of filtering tasks per column in memory
+  return getBoardWithColumnsAndTasks(boardId);
 }
 
 // ---------------------------------------------------------------------------
 // Tasks filtered by priority or title search (database-level)
 // ---------------------------------------------------------------------------
 
-export async function getTasksForBoard(boardId: number, priority?: string, search?: string) {
+export async function getTasksForBoard(
+  boardId: number,
+  priority?: string,
+  search?: string
+) {
   // Title search takes precedence when both params are supplied — the two
   // filters are independent controls and combining them is not required.
   if (search) {
@@ -127,8 +103,11 @@ export async function createTask(data: {
     throw new ValidationError('Priority must be Low, Medium, or High');
   }
 
-  const colResult = await db.query('SELECT id FROM columns WHERE id = $1', [data.columnId]);
-  if (colResult.rows.length === 0) throw new ValidationError('Column not found');
+  const colResult = await db.query('SELECT id FROM columns WHERE id = $1', [
+    data.columnId,
+  ]);
+  if (colResult.rows.length === 0)
+    throw new ValidationError('Column not found');
 
   const insertResult = await db.query<TaskRow>(
     `INSERT INTO tasks (column_id, title, description, priority)
@@ -150,8 +129,11 @@ export async function updateTask(
 ) {
   const db = getDb();
 
-  const existResult = await db.query('SELECT id FROM tasks WHERE id = $1', [taskId]);
-  if (existResult.rows.length === 0) throw new NotFoundError('Task not found');
+  const existResult = await db.query('SELECT id FROM tasks WHERE id = $1', [
+    taskId,
+  ]);
+  if (existResult.rows.length === 0)
+    throw new NotFoundError('Task not found');
 
   const fields: string[] = [];
   const values: unknown[] = [];
@@ -177,7 +159,8 @@ export async function updateTask(
     values.push(data.priority);
   }
 
-  if (fields.length === 0) throw new ValidationError('No fields to update');
+  if (fields.length === 0)
+    throw new ValidationError('No fields to update');
 
   values.push(taskId);
   const updateResult = await db.query<TaskRow>(
@@ -196,11 +179,17 @@ export async function updateTask(
 export async function moveTask(taskId: number, columnId: number) {
   const db = getDb();
 
-  const taskResult = await db.query('SELECT id FROM tasks WHERE id = $1', [taskId]);
-  if (taskResult.rows.length === 0) throw new NotFoundError('Task not found');
+  const taskResult = await db.query('SELECT id FROM tasks WHERE id = $1', [
+    taskId,
+  ]);
+  if (taskResult.rows.length === 0)
+    throw new NotFoundError('Task not found');
 
-  const colResult = await db.query('SELECT id FROM columns WHERE id = $1', [columnId]);
-  if (colResult.rows.length === 0) throw new ValidationError('Destination column not found');
+  const colResult = await db.query('SELECT id FROM columns WHERE id = $1', [
+    columnId,
+  ]);
+  if (colResult.rows.length === 0)
+    throw new ValidationError('Destination column not found');
 
   const updateResult = await db.query<TaskRow>(
     `UPDATE tasks SET column_id = $1 WHERE id = $2
@@ -218,8 +207,11 @@ export async function moveTask(taskId: number, columnId: number) {
 export async function deleteTask(taskId: number) {
   const db = getDb();
 
-  const taskResult = await db.query('SELECT id FROM tasks WHERE id = $1', [taskId]);
-  if (taskResult.rows.length === 0) throw new NotFoundError('Task not found');
+  const taskResult = await db.query('SELECT id FROM tasks WHERE id = $1', [
+    taskId,
+  ]);
+  if (taskResult.rows.length === 0)
+    throw new NotFoundError('Task not found');
 
   await db.query('DELETE FROM tasks WHERE id = $1', [taskId]);
 }

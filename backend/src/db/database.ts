@@ -17,9 +17,17 @@ export async function initDb(): Promise<Pool> {
     throw new Error('DATABASE_URL environment variable is required');
   }
 
+  // Optimize pool settings for production and development
   pool = new Pool({
     connectionString: DATABASE_URL,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+    ssl:
+      process.env.NODE_ENV === 'production'
+        ? { rejectUnauthorized: false }
+        : false,
+    // Connection pool configuration
+    max: process.env.NODE_ENV === 'production' ? 20 : 10, // More connections in production
+    idleTimeoutMillis: 30000, // Close idle connections after 30s
+    connectionTimeoutMillis: 2000, // Wait max 2s for a connection
   });
 
   // Verify connectivity

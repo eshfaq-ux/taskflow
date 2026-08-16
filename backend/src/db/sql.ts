@@ -24,11 +24,11 @@ CREATE TABLE IF NOT EXISTS tasks (
   created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- Index to speed up fetching tasks for a column (used on every board load)
+-- Indexes for performance optimization
 CREATE INDEX IF NOT EXISTS idx_tasks_column_id ON tasks(column_id);
-
--- Index to speed up the priority filter query (Query 2)
 CREATE INDEX IF NOT EXISTS idx_tasks_priority ON tasks(priority);
+CREATE INDEX IF NOT EXISTS idx_tasks_title ON tasks(title);
+CREATE INDEX IF NOT EXISTS idx_columns_board_id ON columns(board_id);
 `;
 
 export const SEED_SQL = `-- Seed data: one board, three columns, eight tasks across different priorities

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import type { Board as BoardType, Priority, CreateTaskData, UpdateTaskData } from '../types/task';
 import * as api from '../services/api';
 import Column from './Column';
@@ -61,7 +61,8 @@ export default function Board() {
   // Priority filter changes load immediately
   useEffect(() => {
     loadBoard(priorityFilter, searchQuery);
-  }, [priorityFilter]); // eslint-disable-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [priorityFilter]);
 
   // Search input is debounced by 300 ms to avoid a request per keystroke
   const handleSearchChange = (value: string) => {
@@ -83,8 +84,16 @@ export default function Board() {
   const handleCreateTask = async (data: CreateTaskData) => {
     try {
       setError('');
-      await api.createTask(data);
-      await loadBoard(priorityFilter, searchQuery);
+      const newTask = await api.createTask(data);
+      // Optimistic update: insert new task into state instead of full refetch
+      if (board) {
+        const updatedColumns = board.columns.map((col) =>
+          col.id === newTask.column_id
+            ? { ...col, tasks: [newTask, ...col.tasks] }
+            : col
+        );
+        setBoard({ ...board, columns: updatedColumns });
+      }
       setShowCreateForm(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create task');
@@ -94,8 +103,15 @@ export default function Board() {
   const handleUpdateTask = async (taskId: number, data: UpdateTaskData) => {
     try {
       setError('');
-      await api.updateTask(taskId, data);
-      await loadBoard(priorityFilter, searchQuery);
+      const updatedTask = await api.updateTask(taskId, data);
+      // Optimistic update: update task in state
+      if (board) {
+        const updatedColumns = board.columns.map((col) => ({
+          ...col,
+          tasks: col.tasks.map((t) => (t.id === taskId ? updatedTask : t)),
+        }));
+        setBoard({ ...board, columns: updatedColumns });
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update task');
     }
@@ -104,8 +120,19 @@ export default function Board() {
   const handleMoveTask = async (taskId: number, columnId: number) => {
     try {
       setError('');
-      await api.moveTask(taskId, columnId);
-      await loadBoard(priorityFilter, searchQuery);
+      const movedTask = await api.moveTask(taskId, columnId);
+      // Optimistic update: move task to new column
+      if (board) {
+        const updatedColumns = board.columns.map((col) => ({
+          ...col,
+          tasks: col.tasks.filter((t) => t.id !== taskId),
+        }));
+        const targetCol = updatedColumns.find((col) => col.id === columnId);
+        if (targetCol) {
+          targetCol.tasks.unshift(movedTask);
+        }
+        setBoard({ ...board, columns: updatedColumns });
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to move task');
     }
@@ -115,46 +142,67 @@ export default function Board() {
     try {
       setError('');
       await api.deleteTask(taskId);
-      await loadBoard(priorityFilter, searchQuery);
+      // Optimistic update: remove task from state
+      if (board) {
+        const updatedColumns = board.columns.map((col) => ({
+          ...col,
+          tasks: col.tasks.filter((t) => t.id !== taskId),
+        }));
+        setBoard({ ...board, columns: updatedColumns });
+      }
       setSelectedTaskId(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete task');
     }
   };
 
-  const selectedTask = board?.columns
-    .flatMap((col) => col.tasks)
-    .find((task) => task.id === selectedTaskId);
+  // Use memoization to avoid O(n) search on every render
+  const selectedTask = useMemo(() => {
+    if (!board || selectedTaskId === null) return undefined;
+    for (const col of board.columns) {
+      const found = col.tasks.find((task) => task.id === selectedTaskId);
+      if (found) return found;
+    }
+    return undefined;
+  }, [board, selectedTaskId]);
 
   if (loading) return <Loading />;
 
   return (
-    <div style={{ 
-      maxWidth: '1400px',
-      margin: '0 auto',
-      padding: '2rem'
-    }}>
+    <div
+      style={{
+        maxWidth: '1400px',
+        margin: '0 auto',
+        padding: '2rem',
+      }}
+    >
       {/* Header */}
-      <div style={{ 
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '2rem'
-      }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '2rem',
+        }}
+      >
         <div>
-          <h1 style={{ 
-            margin: '0 0 0.25rem',
-            fontSize: '1.75rem',
-            fontWeight: '600',
-            color: '#212529'
-          }}>
+          <h1
+            style={{
+              margin: '0 0 0.25rem',
+              fontSize: '1.75rem',
+              fontWeight: '600',
+              color: '#212529',
+            }}
+          >
             {board?.name}
           </h1>
-          <p style={{ 
-            margin: 0,
-            fontSize: '0.95rem',
-            color: '#6c757d'
-          }}>
+          <p
+            style={{
+              margin: 0,
+              fontSize: '0.95rem',
+              color: '#6c757d',
+            }}
+          >
             Manage your team's tasks
           </p>
         </div>
@@ -168,7 +216,15 @@ export default function Board() {
             border: 'none',
             borderRadius: '4px',
             fontSize: '0.95rem',
-            fontWeight: '500'
+            fontWeight: '500',
+            cursor: 'pointer',
+            transition: 'background-color 0.2s',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = '#0b5ed7';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = '#0d6efd';
           }}
         >
           {showCreateForm ? 'Cancel' : '+ New Task'}
@@ -181,12 +237,22 @@ export default function Board() {
         </div>
       )}
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '1rem',
+          marginBottom: '1.5rem',
+          flexWrap: 'wrap',
+        }}
+      >
         <PriorityFilter value={priorityFilter} onChange={handlePriorityChange} />
         <SearchBar value={searchQuery} onChange={handleSearchChange} />
         {(priorityFilter !== 'All' || searchQuery) && (
           <button
-            onClick={() => { handlePriorityChange('All'); }}
+            onClick={() => {
+              handlePriorityChange('All');
+            }}
             style={{
               padding: '0.4rem 0.75rem',
               border: '1px solid #ced4da',
@@ -195,6 +261,13 @@ export default function Board() {
               color: '#6c757d',
               fontSize: '0.85rem',
               cursor: 'pointer',
+              transition: 'background-color 0.2s',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#f8f9fa';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#fff';
             }}
           >
             Clear filters
@@ -205,19 +278,24 @@ export default function Board() {
       {showCreateForm && board && (
         <div style={{ marginBottom: '1.5rem' }}>
           <TaskForm
-            columns={board.columns.map((col) => ({ id: col.id, name: col.name }))}
+            columns={board.columns.map((col) => ({
+              id: col.id,
+              name: col.name,
+            }))}
             onSubmit={handleCreateTask}
             onCancel={() => setShowCreateForm(false)}
           />
         </div>
       )}
 
-      <div style={{
-        display: 'flex',
-        gap: '1rem',
-        overflowX: 'auto',
-        paddingBottom: '1rem'
-      }}>
+      <div
+        style={{
+          display: 'flex',
+          gap: '1rem',
+          overflowX: 'auto',
+          paddingBottom: '1rem',
+        }}
+      >
         {board?.columns.map((column) => (
           <Column
             key={column.id}
@@ -230,7 +308,10 @@ export default function Board() {
       {selectedTask && board && (
         <TaskModal
           task={selectedTask}
-          columns={board.columns.map((col) => ({ id: col.id, name: col.name }))}
+          columns={board.columns.map((col) => ({
+            id: col.id,
+            name: col.name,
+          }))}
           onUpdate={handleUpdateTask}
           onMove={handleMoveTask}
           onDelete={handleDeleteTask}
